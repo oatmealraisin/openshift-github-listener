@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"reflect"
 
 	"github.com/google/go-github/github"
 )
@@ -14,22 +15,25 @@ var secretKey []byte
 
 func ReceiveWebhook(w http.ResponseWriter, req *http.Request) {
 	//	client := github.NewClient(nil)
+	secretKey = []byte("killme")
 
 	payload, err := github.ValidatePayload(req, secretKey)
 	if err != nil {
-		fmt.Println(err.Error())
+		fmt.Printf("Error when validating webhook: %s", err.Error())
 	}
 
 	event, err := github.ParseWebHook(github.WebHookType(req), payload)
 	if err != nil {
-		fmt.Println(err.Error())
+		fmt.Printf("Error when parsing webhook: %s", err.Error())
 	}
 
 	switch event := event.(type) {
 	case *github.PushEvent:
-		fmt.Println("asdf")
+		fmt.Println("Do something w/ a push event")
+	case *github.PingEvent:
+		fmt.Println("Received a ping event! Ready to serve :)")
 	default:
-		fmt.Println(event)
+		fmt.Println(reflect.TypeOf(event).String())
 	}
 }
 
@@ -48,7 +52,5 @@ func main() {
 	}
 
 	http.HandleFunc("/", ReceiveWebhook)
-	go func() {
-		log.Fatal(http.ListenAndServe(fmt.Sprintf(":%s", port), nil))
-	}()
+	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%s", port), nil))
 }
