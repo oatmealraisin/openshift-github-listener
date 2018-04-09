@@ -1,0 +1,65 @@
+#https://hub.docker.com/_/golang/
+apiVersion: v1
+items:
+- apiVersion: v1
+  kind: ImageStream
+  metadata:
+    labels:
+      build: github-listener
+    name: github-listener
+  spec:
+    lookupPolicy:
+      local: false
+- apiVersion: v1
+  kind: ImageStream
+  metadata:
+    creationTimestamp: null
+    labels:
+      build: github-listener
+    name: golang
+  spec:
+    lookupPolicy:
+      local: false
+    tags:
+    - from:
+        kind: DockerImage
+        name: golang
+      generation: null
+      importPolicy: {}
+      name: latest
+      referencePolicy:
+        type: ""
+- apiVersion: v1
+  kind: BuildConfig
+  metadata:
+    labels:
+      build: github-listener
+    name: github-listener
+  spec:
+    nodeSelector: null
+    output:
+      to:
+        kind: ImageStreamTag
+        name: github-listener:latest
+    postCommit: {}
+    resources: {}
+    runPolicy: Serial
+    source:
+      git:
+        uri: https://github.com/oatmealraisin/openshift-github-listener.git
+      sourceSecret:
+        name: github
+      type: Git
+    strategy:
+      dockerStrategy:
+        dockerfilePath: Dockerfile
+        from:
+          kind: ImageStreamTag
+          name: golang:latest
+      type: Docker
+    triggers:
+    - type: ConfigChange
+  status:
+    lastVersion: 0
+kind: List
+metadata: {}
